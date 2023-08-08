@@ -1,0 +1,8 @@
+path: ./data  # dataset root dir
+train: WIDER_train/images  # train images (relative to 'path') 128 images
+val: WIDER_val/images  # val images (relative to 'path') 128 images
+test:  # test images (optional)
+
+# Classes (80 COCO classes)
+names:
+  0: face
