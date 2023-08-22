@@ -13,7 +13,7 @@ import requests
 import torch
 from tqdm import tqdm
 
-from ultralytics.utils import LOGGER, checks, clean_url, emojis, is_online, url2file
+from ultralytics.utils import LOGGER, TQDM_BAR_FORMAT, checks, clean_url, emojis, is_online, url2file
 
 GITHUB_ASSET_NAMES = [f'yolov8{k}{suffix}.pt' for k in 'nsmlx' for suffix in ('', '6', '-cls', '-seg', '-pose')] + \
                      [f'yolov5{k}u.pt' for k in 'nsmlx'] + \
@@ -93,7 +93,7 @@ def zip_directory(directory, compress=True, exclude=('.DS_Store', '__MACOSX'), p
         raise FileNotFoundError(f"Directory '{directory}' does not exist.")
 
     # Unzip with progress bar
-    files_to_zip = [f for f in directory.rglob('*') if f.is_file() and not any(x in f.name for x in exclude)]
+    files_to_zip = [f for f in directory.rglob('*') if f.is_file() and all(x not in f.name for x in exclude)]
     zip_file = directory.with_suffix('.zip')
     compression = ZIP_DEFLATED if compress else ZIP_STORED
     with ZipFile(zip_file, 'w', compression) as f:
@@ -185,11 +185,9 @@ def check_disk_space(url='https://ultralytics.com/assets/coco128.zip', sf=1.5, h
                 f'Please free {data * sf - free:.1f} GB additional disk space and try again.')
         if hard:
             raise MemoryError(text)
-        else:
-            LOGGER.warning(text)
-            return False
+        LOGGER.warning(text)
+        return False
 
-            # Pass if error
     return True
 
 
@@ -287,7 +285,6 @@ def safe_download(url,
                     if method == 'torch':
                         torch.hub.download_url_to_file(url, f, progress=progress)
                     else:
-                        from ultralytics.utils import TQDM_BAR_FORMAT
                         with request.urlopen(url) as response, tqdm(total=int(response.getheader('Content-Length', 0)),
                                                                     desc=desc,
                                                                     disable=not progress,
@@ -333,6 +330,9 @@ def get_github_assets(repo='ultralytics/assets', version='latest', retry=False):
     r = requests.get(url)  # github api
     if r.status_code != 200 and retry:
         r = requests.get(url)  # try again
+    if r.status_code != 200:
+        LOGGER.warning(f'⚠️ GitHub assets check failure for {url}: {r.status_code} {r.reason}')
+        return '', []
     data = r.json()
     return data['tag_name'], [x['name'] for x in data['assets']]  # tag, assets
 
