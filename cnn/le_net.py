@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 from IPython import display
 from torch import nn, optim
 from torch.nn import functional as F
+from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
 from torchvision.transforms import transforms
@@ -88,6 +90,7 @@ def validation(model, test_loader, device):
 
 
 def train(train_epochs, train_loader, test_loader, device):
+    torch.cuda.empty_cache()
     # 定义模型、损失函数和优化器
     model = LeNetV5()
     model = model.to(device)
@@ -113,7 +116,7 @@ def train(train_epochs, train_loader, test_loader, device):
             # 梯度下降
             optimizer.step()
 
-            if (i + 1) % 10 == 0:
+            if (i + 1) % 50 == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
                       .format(epoch + 1, train_epochs, i + 1, len(train_loader), loss.item()))
                 # 损失值
@@ -128,6 +131,9 @@ def train(train_epochs, train_loader, test_loader, device):
         val_accuracy = validation(model, test_loader, device)
         writer.add_scalar('Accuracy/val', val_accuracy, epoch)
 
+    torch.save(model, 'LeNetV5.pt')
+    print("Train model done!!")
+
 
 def show_model(net):
     X = torch.rand(size=(1, 1, 28, 28), dtype=torch.float32)
@@ -137,6 +143,44 @@ def show_model(net):
         print(layer.__class__.__name__, 'output shape: \t', X.shape)
 
     print("==========================================")
+
+
+def imshow(inp, title=None):
+    """Imshow for Tensor."""
+    inp = inp.numpy().transpose((1, 2, 0))
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+    inp = std * inp + mean
+    inp = np.clip(inp, 0, 1)
+    plt.imshow(inp)
+    if title is not None:
+        plt.title(title)
+    plt.pause(0.001)  # pause a bit so that plots are updated
+
+
+def visualize_model(model, data_loader, categories, num_images=6, device='cpu'):
+    model.eval()
+    images_so_far = 0
+    fig = plt.figure()
+
+    with torch.no_grad():
+        for i, (inputs, labels) in enumerate(data_loader):
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+
+            outputs = model(inputs)
+            _, preds = torch.max(outputs, 1)
+
+            for j in range(inputs.size()[0]):
+                images_so_far += 1
+                ax = plt.subplot(num_images // 2, 2, images_so_far)
+                ax.axis('off')
+                ax.set_title(f'predicted: {categories[preds[j]]} actual:{categories[labels[j]]}')
+                imshow(inputs.cpu().data[j])
+                if images_so_far == num_images:
+                    return
+    plt.ioff()
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -159,8 +203,11 @@ if __name__ == '__main__':
     test_size = len(full_dataset) - train_size
     train_dataset, test_dataset = torch.utils.data.random_split(full_dataset, [train_size, test_size])
     # 定义数据加载器
-    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=64, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=64, shuffle=False)
+
+    train_loader = DataLoader(dataset=train_dataset, batch_size=64, shuffle=True, pin_memory=True,
+                              pin_memory_device='cuda')
+    test_loader = DataLoader(dataset=test_dataset, batch_size=64, shuffle=False, pin_memory=True,
+                             pin_memory_device='cuda')
     # 5、查看部分样本并可视化
     X, y = [], []
     for i in range(10):
@@ -168,6 +215,8 @@ if __name__ == '__main__':
         # print(full_dataset.categories[train_dataset[i][1]])
         y.append(full_dataset.categories[train_dataset[i][1]])
     # show_dataset(X, y)
-    train(50, train_loader, test_loader, "cpu")
+    # train(100, train_loader, test_loader, "cpu")
     # model = LeNetV5()
     # show_model(model)
+    model = torch.load("LeNetV5.pt")
+    visualize_model(model, test_loader, full_dataset.categories, device='cuda')
