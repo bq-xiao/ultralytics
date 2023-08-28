@@ -127,7 +127,7 @@ def visualize_model(model, data_loader, categories, num_images=6, device='cpu'):
     model.to(device)
     model.eval()
     images_so_far = 0
-    fig = plt.figure()
+    plt.figure(figsize=(50, 50))
 
     with torch.no_grad():
         for i, (inputs, labels) in enumerate(data_loader):
@@ -141,7 +141,7 @@ def visualize_model(model, data_loader, categories, num_images=6, device='cpu'):
                 images_so_far += 1
                 ax = plt.subplot(num_images // 2, 2, images_so_far)
                 ax.axis('off')
-                ax.set_title(f'predicted: {categories[preds[j]]} actual:{categories[labels[j]]}')
+                ax.set_title(f'predicted: {categories[preds[j]]} \n actual:{categories[labels[j]]}')
                 imshow(inputs.cpu().data[j])
                 if images_so_far == num_images:
                     return
@@ -182,10 +182,10 @@ if __name__ == '__main__':
         y.append(full_dataset.categories[train_dataset[i][1]])
     # show_dataset(X, y)
     # 训练
-    train(20, train_loader, test_loader, "cpu")
+    # train(20, train_loader, test_loader, "cpu")
     # 可视化
     # model = AlexNet()
     # show_model(model)
     # 可视化结果
-    # model = torch.load("Cust_AlexNet.pt")
-    # visualize_model(model, test_loader, full_dataset.categories, device='cuda')
+    model = torch.load("Cust_AlexNet.pt")
+    visualize_model(model, test_loader, full_dataset.categories, device='cuda')
