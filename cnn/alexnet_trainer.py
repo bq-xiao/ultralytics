@@ -2,6 +2,7 @@ import lightning.pytorch as pl
 import torch
 from lightning import Trainer
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
+from lightning.pytorch.loggers import CSVLogger
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
@@ -15,38 +16,50 @@ class AlexNetModule(pl.LightningModule):
         super().__init__()
         self.model = model
         self.loss = loss
-        self.acc = Accuracy(task="multiclass", num_classes=101)
+        self.train_accuracy = Accuracy(task="multiclass", num_classes=101)
+        self.val_accuracy = Accuracy(task="multiclass", num_classes=101)
+        self.test_accuracy = Accuracy(task="multiclass", num_classes=101)
         self.lr = learning_rate
+
+    def forward(self, x):
+        return self.model(x)
+
+    def compute_loss(self, y_hat, y):
+        return self.loss(y_hat, y)
 
     def training_step(self, batch, batch_idx):
         # training_step defines the train loop.
         images, labels = batch
-        x_hat = self.model(images)
-        loss = self.loss(x_hat, labels)
+        x_hat = self(images)
+        loss = self.compute_loss(x_hat, labels)
+        self.train_accuracy.update(x_hat, labels)
         self.log("train_loss", loss, on_epoch=True, on_step=False, prog_bar=True)
+        self.log("train_acc", self.train_accuracy, prog_bar=False)
         return loss
 
     def test_step(self, batch, batch_idx):
         # this is the test loop
         images, labels = batch
-        x_hat = self.model(images)
-        test_loss = self.loss(x_hat, labels)
+        x_hat = self(images)
+        test_loss = self.compute_loss(x_hat, labels)
         # 测试准确率
-        test_acc = self.acc(x_hat, labels)
-        self.log_dict({'test_loss': test_loss, 'test_accuracy': test_acc}, on_epoch=True, on_step=False, prog_bar=True)
+        self.test_accuracy.update(x_hat, labels)
+        self.log_dict(
+            {'test_loss': test_loss, 'test_accuracy': self.test_acc}, on_epoch=True, on_step=False, prog_bar=True)
         return test_loss
 
     def validation_step(self, batch, batch_idx):
         # this is the validation loop
         images, labels = batch
-        x_hat = self.model(images)
+        x_hat = self(images)
         val_loss = self.loss(x_hat, labels)
         # 验证准确率
-        val_acc = self.acc(x_hat, labels)
-        self.log_dict({'val_loss': val_loss, 'val_accuracy': val_acc}, on_epoch=True, on_step=False, prog_bar=True)
+        self.val_accuracy.update(x_hat, labels)
+        self.log_dict(
+            {'val_loss': val_loss, 'val_accuracy': self.val_accuracy}, on_epoch=True, on_step=False, prog_bar=True)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.lr)
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
@@ -90,18 +103,19 @@ if __name__ == '__main__':
     model = AlexNet(num_classes=101)
     # 损失函数
     loss = nn.CrossEntropyLoss()
-    lr = 1e-3
+    lr = 1e-4
     # lighting模型
     module = AlexNetModule(model, loss, learning_rate=lr)
     # 回调函数
-    early_stop_callback = EarlyStopping(monitor="val_loss",
-                                        patience=3,
-                                        mode="min")
+    early_stop_callback = EarlyStopping(monitor="val_accuracy",
+                                        patience=10,
+                                        mode="max")
     lr_monitor = LearningRateMonitor(logging_interval="step")
     ckpt_callback = ModelCheckpoint(
-        monitor='val_loss',
+        monitor='val_accuracy',
         save_top_k=1,
-        mode='min'
+        mode='max',
+        filename="alex-net-{epoch:02d}-{val_accuracy:.2f}"
     )
     # 实例化trainer
     trainer = Trainer(max_epochs=100,
@@ -109,7 +123,9 @@ if __name__ == '__main__':
                       profiler="simple",
                       callbacks=[early_stop_callback, ckpt_callback, lr_monitor],
                       enable_progress_bar=True,
-                      enable_model_summary=True)
+                      enable_model_summary=True,
+                      logger=CSVLogger(save_dir="logs")
+                      )
     # 训练
     trainer.fit(model=module, train_dataloaders=train_loader, val_dataloaders=test_loader)
     # 保存模型

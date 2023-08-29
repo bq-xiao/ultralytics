@@ -163,3 +163,4 @@ weights/
 /ultralytics/assets/
 /cnn/lightning_logs/
 /cnn/*.ckpt
+/cnn/logs/
