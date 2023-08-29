@@ -2,7 +2,6 @@ import lightning.pytorch as pl
 import torch
 from lightning import Trainer
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
-from lightning.pytorch.loggers import CSVLogger
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
@@ -34,7 +33,7 @@ class AlexNetModule(pl.LightningModule):
         loss = self.compute_loss(x_hat, labels)
         self.train_accuracy.update(x_hat, labels)
         self.log("train_loss", loss, on_epoch=True, on_step=False, prog_bar=True)
-        self.log("train_acc", self.train_accuracy, prog_bar=False)
+        self.log("train_acc", self.train_accuracy, prog_bar=True)
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -123,8 +122,7 @@ if __name__ == '__main__':
                       profiler="simple",
                       callbacks=[early_stop_callback, ckpt_callback, lr_monitor],
                       enable_progress_bar=True,
-                      enable_model_summary=True,
-                      logger=CSVLogger(save_dir="logs")
+                      enable_model_summary=True
                       )
     # 训练
     trainer.fit(model=module, train_dataloaders=train_loader, val_dataloaders=test_loader)
