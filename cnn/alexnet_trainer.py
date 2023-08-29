@@ -1,8 +1,9 @@
 import lightning.pytorch as pl
 import torch
 from lightning import Trainer
-from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
-from torch import optim, nn
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
+from torch import nn
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torchmetrics import Accuracy
 from torchvision import transforms, datasets
@@ -10,11 +11,12 @@ from torchvision.models import AlexNet
 
 
 class AlexNetModule(pl.LightningModule):
-    def __init__(self, model, loss):
+    def __init__(self, model, loss, learning_rate=2e-5):
         super().__init__()
         self.model = model
         self.loss = loss
         self.acc = Accuracy(task="multiclass", num_classes=101)
+        self.lr = learning_rate
 
     def training_step(self, batch, batch_idx):
         # training_step defines the train loop.
@@ -44,8 +46,17 @@ class AlexNetModule(pl.LightningModule):
         self.log_dict({'val_loss': val_loss, 'val_accuracy': val_acc}, on_epoch=True, on_step=False, prog_bar=True)
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=1e-3)
-        return optimizer
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": ReduceLROnPlateau(optimizer, mode="max", factor=0.1, patience=3,
+                                               eps=1e-9, verbose=True),
+                "interval": "epoch",
+                "monitor": "val_accuracy",
+                "frequency": 1
+            },
+        }
 
 
 def get_dataloaders():
@@ -79,10 +90,13 @@ if __name__ == '__main__':
     model = AlexNet(num_classes=101)
     # 损失函数
     loss = nn.CrossEntropyLoss()
+    lr = 1e-3
     # lighting模型
-    module = AlexNetModule(model, loss)
+    module = AlexNetModule(model, loss, learning_rate=lr)
     # 回调函数
-    early_stop_callback = EarlyStopping(monitor="val_accuracy", min_delta=0.00, patience=3, verbose=False, mode="max")
+    early_stop_callback = EarlyStopping(monitor="val_loss",
+                                        patience=3,
+                                        mode="min")
     lr_monitor = LearningRateMonitor(logging_interval="step")
     ckpt_callback = ModelCheckpoint(
         monitor='val_loss',
@@ -92,11 +106,13 @@ if __name__ == '__main__':
     # 实例化trainer
     trainer = Trainer(max_epochs=100,
                       accelerator="gpu",
-                      profiler="pytorch",
-                      callbacks=[early_stop_callback, lr_monitor, ckpt_callback],
+                      profiler="simple",
+                      callbacks=[early_stop_callback, ckpt_callback, lr_monitor],
                       enable_progress_bar=True,
                       enable_model_summary=True)
     # 训练
     trainer.fit(model=module, train_dataloaders=train_loader, val_dataloaders=test_loader)
     # 保存模型
     trainer.save_checkpoint('alexnet_model.ckpt')
+    # result = trainer.test(module, test_loader, ckpt_path='last')
+    # print(f"result:\n{result}")
