@@ -129,12 +129,12 @@ if __name__ == '__main__':
     torch.cuda.empty_cache()
     torch.cuda.manual_seed(100)
     # 获取数据加载
-    train_loader, test_loader = get_dataloaders('../datasets/cifar100', batch_size=64, num_workers=4)
+    train_loader, test_loader = get_dataloaders('../datasets/cifar100', batch_size=32, num_workers=1)
     # 定义网络模型
     model = _vgg("A", False, None, True, num_classes=101)
     # 损失函数
     loss = nn.CrossEntropyLoss()
-    lr = 1e-4
+    lr = 1e-3
     # lighting模型
     module = VGGModule(model, loss, learning_rate=lr)
     # 回调函数
@@ -155,8 +155,7 @@ if __name__ == '__main__':
                       profiler="simple",
                       callbacks=[early_stop_callback, ckpt_callback, lr_monitor],
                       enable_progress_bar=True,
-                      enable_model_summary=True
-                      )
+                      enable_model_summary=True)
     # 训练
     trainer.fit(model=module, train_dataloaders=train_loader, val_dataloaders=test_loader)
     # images, labels = next(iter(test_loader))

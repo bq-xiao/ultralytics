@@ -9,9 +9,11 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
 from torchvision.transforms import transforms
 
-
 # 4、同一行画出图片和标签，可视化
 # 本函数已保存在d2lzh_pytorch包中方便以后使用
+from torchviz import make_dot
+
+
 def show_dataset(images, labels):
     display.set_matplotlib_formats('svg')  # 用矢量图进行展示
     # 这里的_表示我们忽略（不使用）的变量
@@ -183,6 +185,18 @@ def visualize_model(model, data_loader, categories, num_images=6, device='cpu'):
     plt.show()
 
 
+# 可视化模型
+def view_model(model, X):
+    y = model(X)
+    dot = make_dot(y.mean(), params=dict(model.named_parameters()))
+    dot.format = "png"
+    dot.filename = "lenet_model"
+    # 指定文件生成的文件夹
+    dot.directory = "torchviz"
+    # 生成文件
+    dot.view()
+
+
 if __name__ == '__main__':
     # 加载MNIST数据集
     # train_dataset = datasets.MNIST(root='../datasets/mnist', train=True, transform=transforms.ToTensor(), download=True)
@@ -216,7 +230,9 @@ if __name__ == '__main__':
         y.append(full_dataset.categories[train_dataset[i][1]])
     # show_dataset(X, y)
     # train(100, train_loader, test_loader, "cpu")
-    # model = LeNetV5()
+    model = LeNetV5()
+    images, labels = next(iter(test_loader))
+    view_model(model, images)
     # show_model(model)
-    model = torch.load("LeNetV5.pt")
-    visualize_model(model, test_loader, full_dataset.categories, device='cuda')
+    # model = torch.load("LeNetV5.pt")
+    # visualize_model(model, test_loader, full_dataset.categories, device='cuda')
