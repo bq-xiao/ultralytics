@@ -167,3 +167,4 @@ pnnx*
 /cnn/*.ckpt
 /cnn/logs/*
 /rnn/lightning_logs/*
+/rnn/*.ckpt

@@ -1,3 +1,5 @@
+import sys
+
 import lightning.pytorch as pl
 import spacy
 import torch
@@ -11,8 +13,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, TensorDataset
 from torchtext.vocab import build_vocab_from_iterator
 
-from rnn.seq2seq_model import EncoderRNN, AttnDecoderRNN
+from seq2seq_model import EncoderRNN, AttnDecoderRNN
 
+sys.path.append(".")
 eng = spacy.load("en_core_web_sm")  # Load the English model to tokenize English text
 zh = spacy.load("zh_core_web_sm")
 MAX_LENGTH = 256
@@ -205,7 +208,7 @@ if __name__ == '__main__':
     dataset = TensorDataset(torch.stack(src_data), torch.stack(target_data))
     # 定义模型
     hidden_size = 128
-    batch_size = 8
+    batch_size = 64
     input_size = len(source_vocab)
     output_size = len(target_vocab)
     total_size = len(dataset)
@@ -245,6 +248,6 @@ if __name__ == '__main__':
     #     print(f"Feature batch shape: {src.size()}")
     #     print(f"Labels batch shape: {target.size()}")
 
-    trainer.fit(model=module, train_dataloaders=dl)
+    trainer.fit(model=module, train_dataloaders=dl, ckpt_path='last')
     print("Train seq2seq model done")
     showPlot(plot_losses)
