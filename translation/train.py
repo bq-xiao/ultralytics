@@ -28,11 +28,11 @@ def evaluate(model, val_iter, vocab_size, en_vocab):
         model.eval()
         pad = en_vocab['<pad>']
         total_loss = 0
-        for b, batch in enumerate(val_iter):
-            src, len_src = batch.src
-            trg, len_trg = batch.trg
-            src = src.data.cuda()
-            trg = trg.data.cuda()
+        for n, batch in enumerate(val_iter):
+            src, trg = batch
+            src = torch.transpose(src, 0, 1)
+            trg = torch.transpose(trg, 0, 1)
+            src, trg = src.cuda(), trg.cuda()
             output = model(src, trg, teacher_forcing_ratio=0.0)
             loss = F.nll_loss(output[1:].view(-1, vocab_size),
                               trg[1:].contiguous().view(-1),
