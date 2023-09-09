@@ -1,3 +1,4 @@
+import torch
 import torchdata.datapipes as dp
 import torchtext.transforms as T
 from torch.utils.data import DataLoader, random_split, Dataset
@@ -8,16 +9,16 @@ from torchtext.vocab import build_vocab_from_iterator
 class CustomTextDataset(Dataset):
     def __init__(self, data_pipe):
         self.data_pipe = data_pipe
+        self.data = list(data_pipe)
 
     def __len__(self):
-        return len(list(self.data_pipe))
+        return len(self.data)
 
     def __getitem__(self, idx):
-        data = list(self.data_pipe)
-        return data[idx]
+        return self.data[idx]
 
 
-def load_dataset(file_path='data/mock.txt', batch_size=32, max_length=64):
+def load_text_dataset(file_path='data/mock.txt', batch_size=32, max_length=64, num_workers=0):
     tokenize_zh = get_tokenizer('spacy', language='zh_core_web_sm')
     tokenize_en = get_tokenizer('spacy', language='en_core_web_sm')
 
@@ -93,6 +94,8 @@ def load_dataset(file_path='data/mock.txt', batch_size=32, max_length=64):
         n = len(data_loader)
         print(f"n size: {n}")
         for sources, targets in data_loader:
+            sources = torch.transpose(sources, 0, 1)
+            targets = torch.transpose(targets, 0, 1)
             print(f"sources size: {sources.shape} \t targets size: {targets.shape}")
             if sources[0][-1] != 0:
                 continue  # Just to visualize padding of shorter sentences
@@ -119,11 +122,11 @@ def load_dataset(file_path='data/mock.txt', batch_size=32, max_length=64):
     print(f"train_dataset: {len(train_dataset)}")
     print(f"test_dataset: {len(test_dataset)}")
     print(f"val_dataset: {len(val_dataset)}")
-    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, num_workers=0)
-    test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, num_workers=0)
-    val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, num_workers=0)
-    # showSomeTransformedSentences(val_loader)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, num_workers=num_workers)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, num_workers=num_workers)
+    val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, num_workers=num_workers)
+    # showSomeTransformedSentences(train_loader)
 
     return train_loader, test_loader, val_loader, en_vocab, zh_vocab
 
-# load_dataset()
+# load_text_dataset(batch_size=8)
