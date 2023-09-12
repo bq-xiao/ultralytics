@@ -18,7 +18,7 @@ class CustomTextDataset(Dataset):
         return self.data[idx]
 
 
-def load_text_dataset(file_path='data/mock.txt', batch_size=32, max_length=64, num_workers=0):
+def load_text_dataset(file_path='data/mock.txt', batch_size=32, max_length=128, num_workers=0):
     tokenize_zh = get_tokenizer('spacy', language='zh_core_web_sm')
     tokenize_en = get_tokenizer('spacy', language='en_core_web_sm')
 

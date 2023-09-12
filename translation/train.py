@@ -14,7 +14,7 @@ def parse_arguments():
     p = argparse.ArgumentParser(description='Hyperparams')
     p.add_argument('-epochs', type=int, default=100,
                    help='number of epochs for train')
-    p.add_argument('-batch_size', type=int, default=16,
+    p.add_argument('-batch_size', type=int, default=128,
                    help='number of epochs for train')
     p.add_argument('-lr', type=float, default=0.0001,
                    help='initial learning rate')
@@ -39,6 +39,65 @@ def evaluate(model, val_iter, vocab_size, en_vocab):
                               ignore_index=pad)
             total_loss += loss.data.item()
         return total_loss / len(val_iter)
+
+
+def predict():
+    args = parse_arguments()
+    hidden_size = 512
+    embed_size = 256
+    assert torch.cuda.is_available()
+
+    print("[!] preparing dataset...")
+    train_loader, test_loader, val_loader, en_vocab, zh_vocab = \
+        load_text_dataset(file_path='data/eng-zh.txt', batch_size=args.batch_size, num_workers=0)
+    en_size, zh_size = len(en_vocab), len(zh_vocab)
+    print("[TRAIN]:%d (dataset:%d)\t[TEST]:%d (dataset:%d)" % (len(train_loader), len(train_loader.dataset),
+                                                               len(test_loader), len(test_loader.dataset)))
+    print("[en_vocab]:%d [zh_vocab]:%d" % (en_size, zh_size))
+
+    print("[!] Instantiating models...")
+    encoder = Encoder(en_size, embed_size, hidden_size,
+                      n_layers=2, dropout=0.5)
+    decoder = Decoder(embed_size, hidden_size, zh_size,
+                      n_layers=1, dropout=0.5)
+    model = Seq2Seq(encoder, decoder)
+    state_dict = torch.load("seq2seq_26.pt")
+    model.load_state_dict(state_dict)
+    with torch.no_grad():
+        model.eval()
+        for n, batch in enumerate(test_loader):
+            src, trg = batch
+            src = torch.transpose(src, 0, 1)
+            trg = torch.transpose(trg, 0, 1)
+            src, trg = src, trg
+            output = model(src, trg, teacher_forcing_ratio=0.0)
+            print(output.shape)
+            _, topi = output.topk(1)
+            print(topi.shape)
+            decoded_ids = topi.squeeze()
+            print(decoded_ids.shape)
+            ss = []
+            for s in src:
+                index = list(s.cpu().numpy())[0]
+                t = en_vocab.lookup_token(index)
+                ss.append(t)
+            print("source :\n")
+            print(ss)
+            tt = []
+            for a in trg:
+                index = list(a.cpu().numpy())[0]
+                t = zh_vocab.lookup_token(index)
+                tt.append(t)
+            print("target : \n")
+            print(tt)
+
+            decoded_words = []
+            for idx in decoded_ids:
+                index = list(idx.cpu().numpy())[0]
+                t = zh_vocab.lookup_token(index)
+                decoded_words.append(t)
+            print("predict : \n")
+            print(decoded_words)
 
 
 def train(model, optimizer, train_iter, vocab_size, grad_clip, en_vocab):
@@ -119,6 +178,7 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        # main()
+        predict()
     except KeyboardInterrupt as e:
         print("[STOP]", e)
