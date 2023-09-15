@@ -231,8 +231,13 @@ def translate(model: torch.nn.Module, src_sentence: str):
 
 
 ######################################################################
-src = "nice to meet you"
-print(f"src:{src}\n")
-print("predict:")
-print(translate(transformer, src))
+while True:
+    src = input("<:")
+    if src is None:
+        continue
+    if src == 'q':
+        print("good bye!")
+        break
+    print(f"src:{src}")
+    print("predict:" + translate(transformer, src) + "\n")
 ######################################################################
