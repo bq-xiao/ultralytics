@@ -99,3 +99,12 @@ def collate_fn(batch):
 train_dataloader = DataLoader(train_pipe, batch_size=batch_size, num_workers=0, collate_fn=collate_fn)
 # ================================
 val_dataloader = DataLoader(val_pipe, batch_size=batch_size, num_workers=0, collate_fn=collate_fn)
+
+# 打印src和target
+# for src, target in val_dataloader:
+#     src = src[:, 0]
+#     target = target[:, 0]
+#     print(f"Feature batch shape: {src.size()}\t"
+#           f"{vocab_transform['eng'].lookup_tokens(list(src.cpu().numpy()))}")
+#     print(f"Labels batch shape: {target.size()}\t"
+#           f"{vocab_transform['zh'].lookup_tokens(list(target.cpu().numpy()))}")

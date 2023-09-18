@@ -2,8 +2,7 @@ import torch
 from lightning import Trainer
 from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
 
-from data import PAD_IDX, vocab_transform, SRC_LANGUAGE, TGT_LANGUAGE, train_dataloader
-from data import val_dataloader
+from data import PAD_IDX, vocab_transform, SRC_LANGUAGE, TGT_LANGUAGE
 from model import Seq2SeqModule, Seq2SeqTransformer
 
 torch.manual_seed(0)
@@ -50,5 +49,5 @@ trainer = Trainer(max_epochs=100,
 #     print(f"Feature batch shape: {src.size()}")
 #     print(f"Labels batch shape: {target.size()}")
 
-trainer.fit(model=module, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, ckpt_path='last')
+# trainer.fit(model=module, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, ckpt_path='last')
 print("Train seq2seq model done")

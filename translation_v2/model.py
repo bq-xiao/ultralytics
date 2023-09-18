@@ -7,7 +7,7 @@ from torch import Tensor
 from torch.nn import Transformer, Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-from data import PAD_IDX, batch_size
+from data import PAD_IDX, batch_size, BOS_IDX, EOS_IDX
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -102,7 +102,27 @@ class Seq2SeqModule(pl.LightningModule):
         self.plot_losses = []
 
     def forward(self, x):
-        return self.transformer(x)
+        x = x.to(DEVICE)
+        src = x.view(-1, 1)
+        num_tokens = src.shape[0]
+        src_mask = (torch.zeros(num_tokens, num_tokens)).type(torch.bool)
+        src_mask = src_mask.to(DEVICE)
+        memory = self.transformer.encode(src, src_mask)
+        ys = torch.ones(1, 1).fill_(BOS_IDX).type(torch.long).to(DEVICE)
+        max_len = num_tokens + 5
+        for i in range(max_len - 1):
+            memory = memory.to(DEVICE)
+            tgt_mask = (self.generate_square_subsequent_mask(ys.size(0)).type(torch.bool)).to(DEVICE)
+            out = self.transformer.decode(ys, memory, tgt_mask)
+            out = out.transpose(0, 1)
+            prob = self.transformer.generator(out[:, -1])
+            _, next_word = torch.max(prob, dim=1)
+            next_word = next_word.item()
+
+            ys = torch.cat([ys, torch.ones(1, 1).type_as(src.data).fill_(next_word)], dim=0)
+            if next_word == EOS_IDX:
+                break
+        return ys.flatten()
 
     def compute_loss(self, y_hat, y):
         y = y[1:, :]
@@ -168,3 +188,6 @@ class Seq2SeqModule(pl.LightningModule):
                 "frequency": 1
             },
         }
+
+    def get_plot_losses(self):
+        return self.plot_losses

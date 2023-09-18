@@ -223,8 +223,7 @@ def translate(model: torch.nn.Module, src_sentence: str):
     src = text_transform[SRC_LANGUAGE](src_sentence).view(-1, 1)
     num_tokens = src.shape[0]
     src_mask = (torch.zeros(num_tokens, num_tokens)).type(torch.bool)
-    tgt_tokens = greedy_decode(
-        model, src, src_mask, max_len=num_tokens + 5, start_symbol=BOS_IDX).flatten()
+    tgt_tokens = greedy_decode(model, src, src_mask, max_len=num_tokens + 5, start_symbol=BOS_IDX).flatten()
     return " ".join(vocab_transform[TGT_LANGUAGE]
                     .lookup_tokens(list(tgt_tokens.cpu().numpy()))) \
         .replace("<bos>", "").replace("<eos>", "")
