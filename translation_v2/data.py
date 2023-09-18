@@ -76,8 +76,11 @@ for ln in [SRC_LANGUAGE, TGT_LANGUAGE]:
 
 # Set ``UNK_IDX`` as the default index. This index is returned when the token is not found.
 # If not set, it throws ``RuntimeError`` when the queried token is not found in the Vocabulary.
+print("saving vocab ...")
 for ln in [SRC_LANGUAGE, TGT_LANGUAGE]:
     vocab_transform[ln].set_default_index(UNK_IDX)
+    # 保存字典
+    torch.save(vocab_transform[ln], ln + ".pt")
 
 for ln in [SRC_LANGUAGE, TGT_LANGUAGE]:
     text_transform[ln] = sequential_transforms(token_transform[ln],  # Tokenization

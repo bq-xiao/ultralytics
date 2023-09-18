@@ -2,7 +2,7 @@ import torch
 from lightning import Trainer
 from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
 
-from data import PAD_IDX, vocab_transform, SRC_LANGUAGE, TGT_LANGUAGE
+from data import PAD_IDX, vocab_transform, SRC_LANGUAGE, TGT_LANGUAGE, train_dataloader, val_dataloader
 from model import Seq2SeqModule, Seq2SeqTransformer
 
 torch.manual_seed(0)
@@ -27,7 +27,7 @@ transformer = Seq2SeqTransformer(NUM_ENCODER_LAYERS, NUM_DECODER_LAYERS, EMB_SIZ
 module = Seq2SeqModule(transformer, loss_fn, learning_rate=lr)
 # 回调函数
 early_stop_callback = EarlyStopping(monitor="val_loss",
-                                    patience=5,
+                                    patience=3,
                                     mode="min")
 lr_monitor = LearningRateMonitor(logging_interval="step")
 ckpt_callback = ModelCheckpoint(
@@ -42,6 +42,7 @@ trainer = Trainer(max_epochs=100,
                   devices=1,
                   profiler="simple",
                   callbacks=[early_stop_callback, ckpt_callback, lr_monitor],
+                  log_every_n_steps=50,
                   enable_progress_bar=True,
                   enable_model_summary=True)
 # 训练
@@ -49,5 +50,6 @@ trainer = Trainer(max_epochs=100,
 #     print(f"Feature batch shape: {src.size()}")
 #     print(f"Labels batch shape: {target.size()}")
 
-# trainer.fit(model=module, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, ckpt_path='last')
+trainer.fit(model=module, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader,
+            ckpt_path='lightning_logs/version_0/checkpoints/seq2seq-transformer-epoch=42-val_loss=0.07.ckpt')
 print("Train seq2seq model done")

@@ -184,7 +184,7 @@ class Seq2SeqModule(pl.LightningModule):
                 "scheduler": ReduceLROnPlateau(optimizer, mode="min", factor=0.1, patience=3,
                                                eps=1e-9, verbose=True),
                 "interval": "epoch",
-                "monitor": "train_loss",
+                "monitor": "val_loss",
                 "frequency": 1
             },
         }
