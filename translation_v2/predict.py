@@ -1,6 +1,6 @@
 import torch
 
-from data import vocab_transform, SRC_LANGUAGE, TGT_LANGUAGE, PAD_IDX, train_dataloader
+from data import vocab_transform, SRC_LANGUAGE, TGT_LANGUAGE, PAD_IDX, text_transform
 from model import Seq2SeqTransformer, Seq2SeqModule
 
 torch.manual_seed(0)
@@ -28,16 +28,13 @@ model = Seq2SeqModule.load_from_checkpoint(
 )
 # disable randomness, dropout, etc...
 model.eval()
-n = 0
-print(f"val_dataloader len: {len(list(train_dataloader))}")
-for src, target in train_dataloader:
-    input = src[:, 0]
-    output = target[:, 0]
-    print(f"src:{vocab_transform['eng'].lookup_tokens(list(input.cpu().numpy()))}")
-    print(f"target:{vocab_transform['zh'].lookup_tokens(list(output.cpu().numpy()))}")
-    # predict with the model
-    predict = model(src)
-    print(f"predict:{vocab_transform['zh'].lookup_tokens(list(predict.cpu().numpy()))} \n")
-    n = n + 1
-    if n > 20:
+while True:
+    src = input("<:")
+    if src is None or '' == src:
+        continue
+    if src == 'q':
+        print("good bye!")
         break
+    data = text_transform['eng'](src).view(-1, 1)
+    predict = model(data)
+    print(f"predict:{vocab_transform['zh'].lookup_tokens(list(predict.cpu().numpy()))} \n")
