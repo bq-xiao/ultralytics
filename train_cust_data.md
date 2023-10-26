@@ -52,8 +52,6 @@ typing_extensions       4.4.0
 
 我的电脑上pytorch版本是1.12.1+cu113。
 
-
-
 ## 准备数据集
 
 #### 下载数据集
@@ -66,8 +64,6 @@ typing_extensions       4.4.0
 
 可以分开下载训练数据集，验证数据集和测试数据集。
 
-
-
 #### 数据集预处理
 
 下载的数据集标注格式如下：
@@ -79,7 +75,6 @@ typing_extensions       4.4.0
 x1, y1, w, h, blur, expression, illumination, invalid, occlusion, pose
 
 其中，人脸标注的坐标如下图所示：
-
 
 ![image-20230807103340048](D:\pyworkspace\ultralytics\imgs\image-20230807103340048.png)
 
@@ -95,8 +90,6 @@ XY坐标轴从左上角开始，W为图像的宽度（width），H为图像的�
 
 YOLO坐标点和标记的宽高需要进行归一化处理。
 
-
-
 #### 标注坐标转换
 
 我们通过程序代码的方式进行转换
@@ -104,7 +97,7 @@ YOLO坐标点和标记的宽高需要进行归一化处理。
 ```python
 # 获取图像长 宽
 # 'WIDER_train/labelv2.txt'
-def get_images_info(meta_file, key_word = '.jpg'):
+def get_images_info(meta_file, key_word='.jpg'):
     # 图像大小
     image_map = dict()
     with open(meta_file, 'r') as f:
@@ -119,13 +112,16 @@ def get_images_info(meta_file, key_word = '.jpg'):
     return image_map
 ```
 
- 通过WIDERFACE自带的标注获取图像的宽度和高度。
+通过WIDERFACE自带的标注获取图像的宽度和高度。
 
 ```python
+import os
+
+
 # 坐标转换
 # annotation_file = 'WIDER_train/label_test.txt'
 # label_base_dir = 'WIDER_train/labels/'
-def generate_yolo_labes(annotation_file, label_base_dir, image_info=None, end_with ='.jpg\n'):
+def generate_yolo_labes(annotation_file, label_base_dir, image_info=None, end_with='.jpg\n'):
     if image_info is None:
         image_info = dict()
 
@@ -164,38 +160,34 @@ def generate_yolo_labes(annotation_file, label_base_dir, image_info=None, end_wi
                 # 标记中心坐标点
                 x_center = x + box_width / 2
                 y_center = y + box_height / 2
-                #print(f"--{x_center}---{y_center}--")
+                # print(f"--{x_center}---{y_center}--")
                 scale_x_center = x_center / img_info['width']
                 scale_box_width = box_width / img_info['width']
                 scale_y_center = y_center / img_info['height']
                 scale_box_height = box_height / img_info['height']
-                #print(f"-scale-{scale_x_center}---{scale_y_center}--")
+                # print(f"-scale-{scale_x_center}---{scale_y_center}--")
                 # class x_center y_center width height
-                yolo_line = "0 " + str(scale_x_center) + " " + str(scale_y_center) \
-                            + " " + str(scale_box_width) + " " + str(scale_box_height) + "\n"
-                yolo_lines.append(yolo_line)
+                yolo_line = "0 " + str(scale_x_center) + " " + str(scale_y_center)
+                + " " + str(scale_box_width) + " " + str(scale_box_height) + "\n"
+            yolo_lines.append(yolo_line)
 
-            # 写文件
-            yolo_file.writelines(yolo_lines)
-            yolo_file.close()
-            print(f"{new_file}:{yolo_lines}")
-            print(f"{new_file} created")
+        # 写文件
+        yolo_file.writelines(yolo_lines)
+        yolo_file.close()
+        print(f"{new_file}:{yolo_lines}")
+        print(f"{new_file} created")
 ```
 
 将标注框的（x1，y1）转换为中心坐标（x_center, y_center）；并且对标记的中心坐标（x_center, y_center）和标记的宽高进行归一化处理，计算中心坐标的简单公式如下：
 
 + x_center = x1 + w1 / 2；x1为标注框的左上坐标，w1为标注框的宽度；
 
-+ y_center = y1 +  h1 / 2；y1为标注框的左上坐标，h1为标注框的高度；
-
-
++ y_center = y1 + h1 / 2；y1为标注框的左上坐标，h1为标注框的高度；
 
 归一化标注数据的公式如下：
 
-+ scale_x_center = x_center / W，scale_box_width = w1  / W；w1，W分别为标注框和图像的宽度；
++ scale_x_center = x_center / W，scale_box_width = w1 / W；w1，W分别为标注框和图像的宽度；
 + scale_y_center = y_center / H，scale_box_height = h1 / H；h1，H分别为标注框和图像的高度；
-
-
 
 我们可以通过如下代码片段对处理后的数据集进行验证。
 
@@ -244,8 +236,6 @@ cd ultralytics
 pip install -r requirements.txt
 ```
 
-
-
 经过以上数据集准备，我们将数据集的结构组织成如下结构：
 
 ```shell
@@ -282,8 +272,6 @@ pip install -r requirements.txt
 
 ![image-20230808102159256](D:\pyworkspace\ultralytics\imgs\image-20230808102159256.png)
 
-
-
 #### 准备训练配置文件
 
 训练前需要准备一个yaml文件，定义数据集和训练分类，格式如下：
@@ -301,8 +289,6 @@ names:
 
 因为我们是单分类训练，所以我们只有一个分类（face）人脸。该文件的格式和结构基本与coco数据集保持一致。
 
-
-
 #### 准备训练脚本
 
 我们可以通过python脚本进行训练，也可以通过yolo命令行进行训练。为了更直观的理解整个训练过程，我们采用脚本的方式进行训练，并且修改了部分训练参数。
@@ -311,13 +297,14 @@ names:
 from ultralytics import YOLO
 from ultralytics import settings
 
+
 def train():
     # Update a setting
     settings.update({'clearml': False,
-                     'comet':False,
-                     'mlflow':False,
-                     'neptune':False,
-                     'raytune':False,
+                     'comet': False,
+                     'mlflow': False,
+                     'neptune': False,
+                     'raytune': False,
                      'wandb': False})
 
     # Update multiple settings
@@ -330,17 +317,18 @@ def train():
     # Train the model using the 'coco128.yaml' dataset for 3 epochs
     results = model.train(
         data='./datasets/cust_data.yaml',
-        project = 'face',
-        name = 'detect',
-        batch = 24,
-        save_period = 3,
-        cache = False,
-        device = 0,
-        single_cls = True,
-        resume = True,
+        project='face',
+        name='detect',
+        batch=24,
+        save_period=3,
+        cache=False,
+        device=0,
+        single_cls=True,
+        resume=True,
 
     )
     print(f"train result:{results}")
+
 
 if __name__ == '__main__':
     train()
@@ -351,8 +339,6 @@ if __name__ == '__main__':
 经过大概40到50个epoch训练，我们训练出一个初始版本的模型best.pt和last.pt。
 
 我们可以分别使用这两个模型做一些推理验证。
-
-
 
 ## 验证
 
@@ -375,15 +361,11 @@ Results saved to D:\pyworkspace\ultralytics\runs\detect\predict3
 
 使用yolov8自带的图像，我们可以使用训练后的模型进行验证，验证结果如上所示。
 
-
-
 ## 总结
 
 #### 数据集收集
 
 大多数情况下，我们需要根据自己的数据集训练出我们需要的模型，这个时候我们的数据一般来自我们的业务数据，也可能是我们根据实际的业务场景，收集到的公开数据，例如：通过网络爬虫定向爬取的数据。也可能我们通过商业途径购买的符合我们业务场景的数据。
-
-
 
 #### 数据集理解
 
@@ -391,15 +373,11 @@ Results saved to D:\pyworkspace\ultralytics\runs\detect\predict3
 
 因此，针对不同的训练任务，我们需要不同结构的数据集。比如：我们是目标检查任务，那么我们的数据集中就必须要存在标注信息，标注出检测目标的坐标，宽度和高度等信息。
 
-
-
 #### 数据集预处理
 
 针对目标检测训练任务，大多数情况下我们可能只有原始的数据，没有标注信息，这个时候我们需要借助其他工具和软件进行自定义标注。并且将标注的数据转换成模型能够理解的结构，才能进行训练。这个时候我们要充分阅读模型的帮助文档，按照文档中的要求将数据和标注信息进行转换。比如：模型要求输入的数据和标注信息要做归一化，我们就要按照要求和计算公式对数据做归一化处理；需要坐标点做转换的我们要进行坐标点转换等。
 
 如果我们是从网络上下载的公开数据集，一般情况下会包含原始数据和一些标签数据（标注框，标注点等）。这个时候我们可以用下载的数据集直接进行训练，也可能需要稍作预处理。
-
-
 
 #### 训练
 
