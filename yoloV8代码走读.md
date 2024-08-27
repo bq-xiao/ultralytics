@@ -131,7 +131,9 @@ parse_model是将yaml配置文件中的参数转化为torch模型，该函数会
 
 ## train方法
 
-根据不同的任务类型，调用不同的trainer，例如：detect类型的任务，则调用DetectionTrainer类中的train函数。 yolo.classify.ClassificationTrainer
+根据不同的任务类型，调用不同的trainer，例如：detect类型的任务，则调用DetectionTrainer类中的train函数。 DetectionTrainer继承自BaseTrainer，因此会调用BaseTrainer类的train方法。
+
+> self.trainer.train() -> yolo.detect.DetectionTrainer.train()->ultralytics.engine.trainer.BaseTrainer.train()
 
 ```python
 def train(cfg=DEFAULT_CFG, use_python=False):
