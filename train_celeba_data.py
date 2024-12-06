@@ -17,19 +17,20 @@ def train():
 
     # Load a pretrained YOLO model (recommended for training)
     # model = YOLO('./best.pt')
-    model = YOLO('yolov8n.yaml')
+    model = YOLO('./yolo11n.pt')
 
     # Train the model using the 'coco128.yaml' dataset for 3 epochs
     results = model.train(
-        data='./datasets/cust_data.yaml',
-        project='face',
+        data='./datasets/celeba_cust_data.yaml',
+        project='celeba',
         name='detect',
-        batch=24,
+        batch=-1,
         save_period=3,
         cache=False,
         device='cpu',
         single_cls=False,
-        resume=True
+        resume=False,
+        imgsz=(178, 218)
     )
     print(f"train result:{results}")
 

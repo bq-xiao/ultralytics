@@ -1,9 +1,9 @@
 import cv2
 from matplotlib import pyplot as plt
 
-with open('data/WIDER_train/labels/54--Rescue/54_Rescue_rescuepeople_54_29.txt', 'r') as f:
+with open('../datasets/data/WIDER_train/labels/54--Rescue/54_Rescue_rescuepeople_54_29.txt', 'r') as f:
     lines = f.readlines()
-    full_path = "data/WIDER_train/images/54--Rescue/54_Rescue_rescuepeople_54_29.jpg"
+    full_path = "../datasets/data/WIDER_train/images/54--Rescue/54_Rescue_rescuepeople_54_29.jpg"
     img = cv2.imread(full_path)
     height, width, channels = img.shape
     plt.imshow(img)
