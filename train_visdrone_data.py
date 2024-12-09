@@ -13,7 +13,7 @@ def train():
 
     # Update multiple settings
     settings.update({'tensorboard': True})
-    settings.update({'datasets_dir': r'D:\pyworkspace\ultralytics\datasets'})
+    settings.update({'datasets_dir': r'D:\pyworkspace\datasets'})
 
     # Load a pretrained YOLO model (recommended for training)
     # model = YOLO('./best.pt')
@@ -21,8 +21,8 @@ def train():
 
     # Train the model using the 'coco128.yaml' dataset for 3 epochs
     results = model.train(
-        data='./datasets/celeba_cust_data.yaml',
-        project='celeba',
+        data='VisDrone.yaml',
+        project='VisDrone',
         name='detect',
         batch=-1,
         save_period=3,
@@ -30,7 +30,7 @@ def train():
         device='cpu',
         single_cls=False,
         resume=False,
-        imgsz=(178, 218)
+        imgsz=640
     )
     print(f"train result:{results}")
 
