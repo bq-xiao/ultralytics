@@ -27,7 +27,7 @@ def train():
         batch=-1,
         save_period=3,
         cache=False,
-        device='cuda',
+        device='cpu',
         single_cls=False,
         resume=False
     )
