@@ -18,6 +18,7 @@ def train():
     # Load a pretrained YOLO model (recommended for training)
     # model = YOLO('./best.pt')
     model = YOLO('yolo11n.pt')
+    # model = YOLO('ultralytics/cfg/models/11/yolo11.yaml')
 
     # Train the model using the 'coco128.yaml' dataset for 3 epochs
     results = model.train(
