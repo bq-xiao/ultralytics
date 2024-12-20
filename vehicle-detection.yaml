@@ -1,0 +1,12 @@
+path: vehicle-detection # dataset root dir
+train: train/images
+val: valid/images
+test: test/images
+
+# Classes
+names:
+  0: Bus
+  1: Car
+  2: Motorcycle
+  3: Pickup
+  4: Truck
