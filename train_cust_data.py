@@ -13,22 +13,22 @@ def train():
 
     # Update multiple settings
     settings.update({'tensorboard': True})
-    settings.update({'datasets_dir': r'D:\pyworkspace\datasets'})
+    settings.update({'datasets_dir': r'/Users/xiaobaoqiang/pyworkspace/datasets'})
 
     # Load a pretrained YOLO model (recommended for training)
     # model = YOLO('./best.pt')
-    model = YOLO('yolo11n.pt')
+    model = YOLO('yolo11n-seg.pt')
     # model = YOLO('ultralytics/cfg/models/11/yolo11.yaml')
 
     # Train the model using the 'coco128.yaml' dataset for 3 epochs
     results = model.train(
-        data='vehicle-detection.yaml',
-        project='vehicle-detection',
-        name='detect',
+        data='package-seg.yaml',
+        project='package-seg',
+        name='segment',
         batch=-1,
-        save_period=10,
+        save_period=20,
         cache=False,
-        device='cpu',
+        device='mps',
         verbose=True,
         single_cls=False,
         resume=False
