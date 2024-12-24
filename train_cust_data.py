@@ -31,7 +31,7 @@ def train():
         imgsz=640,
         patience=60,
         cache=False,
-        device='cuda',
+        device='cpu',
         verbose=True,
         single_cls=True,
         resume=False
