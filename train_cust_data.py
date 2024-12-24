@@ -13,24 +13,27 @@ def train():
 
     # Update multiple settings
     settings.update({'tensorboard': True})
-    settings.update({'datasets_dir': r'/Users/xiaobaoqiang/pyworkspace/datasets'})
+    settings.update({'datasets_dir': r'D:\pyworkspace\datasets'})
 
     # Load a pretrained YOLO model (recommended for training)
     # model = YOLO('./best.pt')
-    model = YOLO('yolo11n-seg.pt')
+    model = YOLO('yolo11m.pt')
     # model = YOLO('ultralytics/cfg/models/11/yolo11.yaml')
 
     # Train the model using the 'coco128.yaml' dataset for 3 epochs
     results = model.train(
-        data='package-seg.yaml',
-        project='package-seg',
-        name='segment',
+        data='human-faces-det.yaml',
+        project='human-faces-det',
+        name='detect',
         batch=-1,
-        save_period=20,
+        save_period=100,
+        epochs=200,
+        imgsz=640,
+        patience=60,
         cache=False,
-        device='mps',
+        device='cuda',
         verbose=True,
-        single_cls=False,
+        single_cls=True,
         resume=False
     )
     print(f"train result:{results}")
