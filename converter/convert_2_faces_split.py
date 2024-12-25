@@ -2,8 +2,9 @@ import shutil
 
 import pandas as pd
 
-csv = pd.read_csv('../../datasets/human-faces-object-detection/unique.csv')
-train = csv.iloc[0:2000]
+csv = pd.read_csv('../../datasets/human-faces-object-detection/faces.csv', usecols=['image_name'])
+image = csv.drop_duplicates(subset=['image_name'])
+train = image.iloc[0:2000]
 
 for index, row in train.iterrows():
     img_name = row['image_name']

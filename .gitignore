@@ -177,3 +177,4 @@ calibration_*.npy
 /gradio_cached_examples/
 /vehicle-detection/
 /human-faces-seg/
+sam2
