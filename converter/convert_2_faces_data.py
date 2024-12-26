@@ -11,8 +11,8 @@ def convert_box(df):
 
     b_width = x1 - x0
     b_heght = y1 - y0
-    x_center = b_width / 2
-    y_center = b_heght / 2
+    x_center = x0 + b_width / 2
+    y_center = y0 + b_heght / 2
     return round(x_center / width, 6), round(y_center / height, 6), \
            round(b_width / width, 6), round(b_heght / height, 6)
 
