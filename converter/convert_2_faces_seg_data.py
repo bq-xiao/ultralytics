@@ -3,13 +3,12 @@ import pandas as pd
 import torch
 from PIL import Image
 
-from ultralytics.utils import ops
-
-csv = pd.read_csv('../../datasets/human-faces-object-detection/faces.csv')
 from sam2.build_sam import build_sam2
 from sam2.sam2_image_predictor import SAM2ImagePredictor
+from ultralytics.utils import ops
 
 # select the device for computation
+
 if torch.cuda.is_available():
     device = torch.device("cuda")
 elif torch.backends.mps.is_available():
@@ -38,10 +37,11 @@ def xyn(data, orig_shape):
     ]
 
 
+csv = pd.read_csv(r'D:\pyworkspace\datasets\human-faces-object-detection\faces.csv')
 for index, row in csv.iterrows():
     img_name = row['image_name']
     x0, y0, x1, y1 = float(row['x0']), float(row['y0']), float(row['x1']), float(row['y1'])
-    orig_img = '../../datasets/human-faces-object-detection/data/images/train/' + img_name
+    orig_img = r'D:\pyworkspace\datasets\human-faces-object-detection\data\images\train\\' + img_name
     image = Image.open(orig_img)
     image = np.array(image.convert("RGB"))
     predictor.set_image(image)
@@ -56,11 +56,11 @@ for index, row in csv.iterrows():
     segments = xyn(torch.tensor(masks), orig_shape)
 
     file_array = img_name.split(".")
-    new_file = '../../datasets/human-faces-object-detection/seg-labels/' + file_array[0] + ".txt"
+    new_file = r'D:\pyworkspace\datasets\human-faces-object-detection\test\\' + file_array[0] + ".txt"
     with open(new_file, "a") as f:
         for i in range(len(segments)):
             s = segments[i]
             if len(s) == 0:
                 continue
-            segment = map(str, segments[i].reshape(-1).tolist())
+            segment = map(lambda x: str(round(x, 6)), segments[i].reshape(-1).tolist())
             f.write(f"0 " + " ".join(segment) + "\n")

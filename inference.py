@@ -1,4 +1,8 @@
 from ultralytics import solutions
 
-# Pass a model as an argument
-solutions.inference(model="yolo11x.pt")
+inf = solutions.Inference(
+    model="human-faces-det.pt",  # You can use any model that Ultralytics support, i.e. YOLO11, YOLOv10
+)
+inf.inference()
+
+### Make sure to run the file using command `streamlit run <file-name.py>`

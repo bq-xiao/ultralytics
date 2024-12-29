@@ -178,3 +178,6 @@ calibration_*.npy
 /vehicle-detection/
 /human-faces-seg/
 sam2
+human-faces-det
+*.tar.gz
+*.tar
