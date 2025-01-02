@@ -1,7 +1,7 @@
 from ultralytics import solutions
 
 inf = solutions.Inference(
-    model="human-faces-det.pt",  # You can use any model that Ultralytics support, i.e. YOLO11, YOLOv10
+    model="human-faces-seg.pt",  # You can use any model that Ultralytics support, i.e. YOLO11, YOLOv10
 )
 inf.inference()
 
