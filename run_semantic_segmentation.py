@@ -1,3 +1,5 @@
+# !pip install transformers datasets evaluate accelerate albumentations clearml
+
 import logging
 import os
 import sys
