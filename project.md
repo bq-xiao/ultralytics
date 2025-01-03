@@ -1,4 +1,4 @@
-##       
+##          
 
 ### 1.数据集(无标注)
 
@@ -22,3 +22,9 @@
 
 *****
 小epochs先验证，验证没问题后，大epochs训练
+
+### transformers
+
+https://hf-mirror.com/docs/transformers/v4.47.1/en/tasks/semantic_segmentation#load-sceneparse150-dataset
+https://hf-mirror.com/tasks/image-segmentation
+https://hf-mirror.com/blog/fine-tune-segformer
